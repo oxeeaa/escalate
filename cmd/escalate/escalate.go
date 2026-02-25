@@ -15,6 +15,7 @@ import (
 
 var verboseFlag bool = false
 var qrFlag bool = false
+var forceFlag bool = false
 
 func walletPaths() (walletPath, walletFilePath string, err error) {
 	home, err := os.UserHomeDir()
@@ -79,7 +80,7 @@ var receiveCmd = &cobra.Command{
 		}
 
 		c, _ := client.NewHttpClient()
-		w, err := wallet.NewFromData(data, &c)
+		w, err := wallet.FromData(data, &c)
 		if err != nil {
 			panic(err)
 		}
@@ -173,7 +174,7 @@ var balanceCmd = &cobra.Command{
 			panic(err)
 		}
 
-		balance, err := w.GetBalance()
+		balance, err := w.GetBalance(forceFlag)
 		if err != nil {
 			panic(err)
 		}
@@ -229,6 +230,7 @@ func main() {
 	lsCmd.Flags().BoolVar(&verboseFlag, "verbose", false, "verbose output")
 	receiveCmd.Flags().BoolVar(&qrFlag, "qr", false, "generate a qr code")
 	caCmd.Flags().BoolVar(&qrFlag, "qr", false, "generate a qr code")
+	balanceCmd.Flags().BoolVar(&forceFlag, "force", false, "force balance updates (fetch)")
 
 	rootCmd.AddCommand(newCmd)
 	rootCmd.AddCommand(receiveCmd)
@@ -254,7 +256,7 @@ func loadWallet() (*wallet.Wallet, error) {
 
 	}
 	c, _ := client.NewHttpClient()
-	w, err := wallet.NewFromData(data, &c)
+	w, err := wallet.FromData(data, &c)
 	if err != nil {
 		return nil, err
 	}

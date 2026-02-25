@@ -42,7 +42,7 @@ func New(c *client.HttpWalletClient) (*Wallet, error) {
 	}, nil
 }
 
-func NewFromData(data []byte, c *client.HttpWalletClient) (Wallet, error) {
+func FromData(data []byte, c *client.HttpWalletClient) (Wallet, error) {
 	w, err := Deserialize(data)
 	if err != nil {
 		return w, err
@@ -102,7 +102,7 @@ func (w *Wallet) DeriveAddress() (*Address, error) {
 	return &address, nil
 }
 
-func (w *Wallet) GetBalance() (int64, error) {
+func (w *Wallet) GetBalance(force bool) (int64, error) {
 	var balance int64 = 0
 
 	for idx, address := range w.Addresses {
@@ -112,7 +112,7 @@ func (w *Wallet) GetBalance() (int64, error) {
 		isNewAddress := address.CreatedAt.After(now.Add(-24 * time.Hour))
 		wasNotUpdated := address.UpdatedAt.Equal(address.CreatedAt)
 
-		if isUpdateStale || (isNewAddress && wasNotUpdated) {
+		if force || (isUpdateStale || (isNewAddress && wasNotUpdated)) {
 			stats, err := w.client.GetAddressStats(address.Addr)
 			if err != nil {
 				log.Printf("failed to fetch data for %s", address.Addr)
